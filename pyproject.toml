@@ -149,3 +149,8 @@ unfixable = []
 
 [tool.ruff.extend-per-file-ignores]
 "tests/**/*.py" = ["D"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+]
