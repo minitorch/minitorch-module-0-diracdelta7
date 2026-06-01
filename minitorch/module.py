@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Optional, Sequence, Tuple
+from typing import Any
+from collections.abc import Sequence
 
 
 class Module:
@@ -15,8 +16,8 @@ class Module:
 
     """
 
-    _modules: Dict[str, Module]
-    _parameters: Dict[str, Parameter]
+    _modules: dict[str, Module]
+    _parameters: dict[str, Parameter]
     training: bool
 
     def __init__(self) -> None:
@@ -26,7 +27,7 @@ class Module:
 
     def modules(self) -> Sequence[Module]:
         """Return the direct child modules of this module."""
-        m: Dict[str, Module] = self.__dict__["_modules"]
+        m: dict[str, Module] = self._modules
         return list(m.values())
 
     def train(self) -> None:
@@ -41,7 +42,7 @@ class Module:
         for m in self.modules():
             m.eval()
 
-    def named_parameters(self) -> Sequence[Tuple[str, Parameter]]:
+    def named_parameters(self) -> Sequence[tuple[str, Parameter]]:
         """Collect all the parameters of this module and its descendents.
 
         Returns
@@ -85,7 +86,7 @@ class Module:
         self.__dict__["_parameters"][k] = val
         return val
 
-    def __setattr__(self, key: str, val: Parameter) -> None:
+    def __setattr__(self, key: str, val: Any) -> None:
         if isinstance(val, Parameter):
             self.__dict__["_parameters"][key] = val
         elif isinstance(val, Module):
@@ -140,7 +141,7 @@ class Parameter:
     any value for testing.
     """
 
-    def __init__(self, x: Any, name: Optional[str] = None) -> None:
+    def __init__(self, x: Any, name: str | None = None) -> None:
         self.value = x
         self.name = name
         if hasattr(x, "requires_grad_"):

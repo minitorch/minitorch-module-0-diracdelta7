@@ -1,7 +1,7 @@
 import math
 import random
 from dataclasses import dataclass
-from typing import Callable
+from collections.abc import Callable
 
 
 Point = tuple[float, float]

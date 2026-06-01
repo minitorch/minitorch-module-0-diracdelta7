@@ -1,4 +1,4 @@
-from typing import Callable, List, Tuple
+from collections.abc import Callable
 
 import pytest
 from hypothesis import given
@@ -179,7 +179,7 @@ def test_zip_with(a: float, b: float, c: float, d: float) -> None:
     lists(small_floats, min_size=5, max_size=5),
     lists(small_floats, min_size=5, max_size=5),
 )
-def test_sum_distribute(ls1: List[float], ls2: List[float]) -> None:
+def test_sum_distribute(ls1: list[float], ls2: list[float]) -> None:
     """Write a test that ensures that the sum of `ls1` plus the sum of `ls2`
     is the same as the sum of each element of `ls1` plus each element of `ls2`.
     """
@@ -190,7 +190,7 @@ def test_sum_distribute(ls1: List[float], ls2: List[float]) -> None:
 
 @pytest.mark.task0_3
 @given(lists(small_floats))
-def test_sum(ls: List[float]) -> None:
+def test_sum(ls: list[float]) -> None:
     assert_close(sum(ls), minitorch.operators.sum(ls))
 
 
@@ -202,7 +202,7 @@ def test_prod(x: float, y: float, z: float) -> None:
 
 @pytest.mark.task0_3
 @given(lists(small_floats))
-def test_negList(ls: List[float]) -> None:
+def test_neglist(ls: list[float]) -> None:
     check = negList(ls)
     for i, j in zip(ls, check):
         assert_close(i, -j)
@@ -218,7 +218,7 @@ one_arg, two_arg, _ = MathTest._tests()
 
 @given(small_floats)
 @pytest.mark.parametrize("fn", one_arg)
-def test_one_args(fn: Tuple[str, Callable[[float], float]], t1: float) -> None:
+def test_one_args(fn: tuple[str, Callable[[float], float]], t1: float) -> None:
     name, base_fn = fn
     base_fn(t1)
 
@@ -226,7 +226,7 @@ def test_one_args(fn: Tuple[str, Callable[[float], float]], t1: float) -> None:
 @given(small_floats, small_floats)
 @pytest.mark.parametrize("fn", two_arg)
 def test_two_args(
-    fn: Tuple[str, Callable[[float, float], float]], t1: float, t2: float
+    fn: tuple[str, Callable[[float, float], float]], t1: float, t2: float
 ) -> None:
     name, base_fn = fn
     base_fn(t1, t2)

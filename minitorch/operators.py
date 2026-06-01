@@ -3,7 +3,7 @@
 import math
 
 # ## Task 0.1
-from typing import Callable, Iterable
+from collections.abc import Callable, Iterable
 
 #
 # Implementation of a prelude of elementary functions.
@@ -60,7 +60,7 @@ def lt(x: float, y: float) -> float:
 
 def eq(x: float, y: float) -> float:
     """Return whether two inputs are equal."""
-    return x == y
+    return 1.0 if x == y else 0.0
 
 
 def max(x: float, y: float) -> float:
@@ -70,17 +70,17 @@ def max(x: float, y: float) -> float:
 
 def is_close(x: float, y: float) -> float:
     """Return whether two inputs differ by less than 1e-2."""
-    return abs(x - y) < 1e-2
+    return 1.0 if abs(x - y) < 1e-2 else 0.0
 
 
 def sigmoid(x: float) -> float:
     """Return the sigmoid of the input."""
-    return 1 / (1 + math.exp(-x))
+    return 1 / (1 + math.exp(-x)) if x >= 0 else math.exp(x) / (1 + math.exp(x))
 
 
 def relu(x: float) -> float:
     """Return the ReLU of the input."""
-    return x if x >= 0 else 0
+    return x if x >= 0.0 else 0.0
 
 
 def log(x: float) -> float:
