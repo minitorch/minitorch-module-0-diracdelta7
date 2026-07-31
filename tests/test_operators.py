@@ -1,7 +1,8 @@
 from collections.abc import Callable
+from itertools import permutations
 
 import pytest
-from hypothesis import given
+from hypothesis import given, assume
 from hypothesis.strategies import lists
 
 from minitorch import MathTest
@@ -27,7 +28,7 @@ from minitorch.operators import (
     sigmoid,
 )
 
-from .strategies import assert_close, small_floats
+from .strategies import assert_close, small_floats, moderate_floats
 
 # ## Task 0.1 Basic hypothesis tests.
 
@@ -107,31 +108,32 @@ def test_sigmoid(a: float) -> None:
     * It is always between 0.0 and 1.0.
     * one minus sigmoid is the same as sigmoid of the negative
     * It crosses 0 at 0.5
-    * It is  strictly increasing.
+    * It is  .
     """
-    assert sigmoid(a) <= 1.0
-    assert 0.0 <= sigmoid(a)
+    value = sigmoid(a)
+
+    assert 0.0 <= value <= 1.0
     assert_close(1 - sigmoid(a), sigmoid(-a))
-    assert_close(0.5, sigmoid(0.0))
-    assert sigmoid(a) <= sigmoid(a + 1e-2)
+
+@pytest.mark.task0_2
+def test_sigmoid_at_zero() -> None:
+    assert sigmoid(0.0) == 0.5
+
+@pytest.mark.task0_2
+@given(moderate_floats)
+def test_sigmoid_strictly_increasing(a: float) -> None:
+    assert sigmoid(a) < sigmoid(a + 1e-2)
 
 
 @pytest.mark.task0_2
 @given(small_floats, small_floats, small_floats)
 def test_transitive(a: float, b: float, c: float) -> None:
     """Test the transitive property of less-than (a < b and b < c implies a < c)"""
-    if lt(a, b) and lt(b, c):
-        assert lt(a, c)
-    elif lt(a, c) and lt(c, b):
-        assert lt(a, b)
-    elif lt(b, a) and lt(a, c):
-        assert lt(b, c)
-    elif lt(b, c) and lt(c, a):
-        assert lt(b, a)
-    elif lt(c, a) and lt(a, b):
-        assert lt(c, b)
-    elif lt(c, b) and lt(b, a):
-        assert lt(c, a)
+    for x, y, z in permutations((a, b, c)):
+        if x < y < z:
+            assert lt(x, y)
+            assert lt(y, z)
+            assert lt(x, z)
 
 
 @pytest.mark.task0_2

@@ -32,15 +32,19 @@ class Module:
 
     def train(self) -> None:
         """Set the mode of this module and all descendent modules to `train`."""
-        self.training = True
-        for m in self.modules():
-            m.train()
+        stack: list[Module] = [self]
+        while stack:
+            module = stack.pop()
+            module.training = True
+            stack.extend(module.modules())
 
     def eval(self) -> None:
         """Set the mode of this module and all descendent modules to `eval`."""
-        self.training = False
-        for m in self.modules():
-            m.eval()
+        stack: list[Module] = [self]
+        while stack:
+            module = stack.pop()
+            module.training = False
+            stack.extend(module.modules())
 
     def named_parameters(self) -> Sequence[tuple[str, Parameter]]:
         """Collect all the parameters of this module and its descendents.
@@ -50,12 +54,13 @@ class Module:
             The name and `Parameter` of each ancestor parameter.
 
         """
-        result = []
-        for k, v in self.__dict__["_parameters"].items():
-            result.append((k, v))
+        result = list(self._parameters.items())
+
         for m_name, m in self.__dict__["_modules"].items():
             for p_name, param in m.named_parameters():
-                result.append((m_name + "." + p_name, param))
+                result.append(
+                    (f"{m_name}.{p_name}",param)
+                )
 
         return result
 
@@ -100,7 +105,9 @@ class Module:
 
         if key in self.__dict__["_modules"]:
             return self.__dict__["_modules"][key]
-        return None
+        raise AttributeError(
+            f"{type(self).__name__!s} has no attribute {key!r}"
+        )
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
         """Call forward with the provided arguments."""

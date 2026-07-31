@@ -31,8 +31,9 @@ from collections.abc import Callable, Iterable
 # For is_close:
 # $f(x) = |x - y| < 1e-2$
 
+FLOAT_CLOSE_EPS = 1e-2
 
-# TODO: Implement for Task 0.1.
+
 def mul(x: float, y: float) -> float:
     """Return the product of two numbers."""
     return x * y
@@ -70,17 +71,21 @@ def max(x: float, y: float) -> float:
 
 def is_close(x: float, y: float) -> float:
     """Return whether two inputs differ by less than 1e-2."""
-    return 1.0 if abs(x - y) < 1e-2 else 0.0
+    return 1.0 if abs(x - y) < FLOAT_CLOSE_EPS else 0.0
 
 
 def sigmoid(x: float) -> float:
     """Return the sigmoid of the input."""
-    return 1 / (1 + math.exp(-x)) if x >= 0 else math.exp(x) / (1 + math.exp(x))
+    if x >= 0.0:
+        return 1 / (1 + math.exp(-x))
+    else:
+        exp_x = math.exp(x)
+        return exp_x / (1 + exp_x)
 
 
 def relu(x: float) -> float:
     """Return the ReLU of the input."""
-    return x if x >= 0.0 else 0.0
+    return x if x > 0.0 else 0.0
 
 
 def log(x: float) -> float:
@@ -132,9 +137,6 @@ def relu_back(x: float, y: float) -> float:
 # - prod: take the product of lists
 
 
-# TODO: Implement for Task 0.3.
-
-
 def map(fn: Callable[[float], float], container: Iterable[float]) -> list[float]:
     """Higher-order function that applies a given function to each element of an iterable"""
     return [fn(num) for num in container]
@@ -159,21 +161,21 @@ def reduce(
     return result
 
 
-def negList(lst: list[float]) -> list[float]:
+def negList(lst: Iterable[float]) -> list[float]:
     """Negate a list."""
     return map(neg, lst)
 
 
-def addLists(lst1: list[float], lst2: list[float]) -> list[float]:
+def addLists(lst1: Iterable[float], lst2: list[float]) -> list[float]:
     """Add two lists together."""
     return zipWith(add, lst1, lst2)
 
 
-def sum(lst: list[float]) -> float:
+def sum(lst: Iterable[float]) -> float:
     """Sum a list."""
     return reduce(add, lst, 0.0)
 
 
-def prod(lst: list[float]) -> float:
+def prod(lst: Iterable[float]) -> float:
     """Calculate the product of all elements in a list."""
     return reduce(mul, lst, 1.0)
