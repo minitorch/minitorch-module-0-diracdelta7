@@ -1,7 +1,8 @@
-from typing import Callable, List, Tuple
+from collections.abc import Callable
+from itertools import permutations
 
 import pytest
-from hypothesis import given
+from hypothesis import given, assume
 from hypothesis.strategies import lists
 
 from minitorch import MathTest
@@ -14,6 +15,8 @@ from minitorch.operators import (
     inv,
     inv_back,
     log_back,
+    log,
+    exp,
     lt,
     max,
     mul,
@@ -25,7 +28,7 @@ from minitorch.operators import (
     sigmoid,
 )
 
-from .strategies import assert_close, small_floats
+from .strategies import assert_close, small_floats, moderate_floats
 
 # ## Task 0.1 Basic hypothesis tests.
 
@@ -105,43 +108,57 @@ def test_sigmoid(a: float) -> None:
     * It is always between 0.0 and 1.0.
     * one minus sigmoid is the same as sigmoid of the negative
     * It crosses 0 at 0.5
-    * It is  strictly increasing.
+    * It is  .
     """
-    # TODO: Implement for Task 0.2.
-    raise NotImplementedError("Need to implement for Task 0.2")
+    value = sigmoid(a)
+
+    assert 0.0 <= value <= 1.0
+    assert_close(1 - sigmoid(a), sigmoid(-a))
+
+@pytest.mark.task0_2
+def test_sigmoid_at_zero() -> None:
+    assert sigmoid(0.0) == 0.5
+
+@pytest.mark.task0_2
+@given(moderate_floats)
+def test_sigmoid_strictly_increasing(a: float) -> None:
+    assert sigmoid(a) < sigmoid(a + 1e-2)
 
 
 @pytest.mark.task0_2
 @given(small_floats, small_floats, small_floats)
 def test_transitive(a: float, b: float, c: float) -> None:
     """Test the transitive property of less-than (a < b and b < c implies a < c)"""
-    # TODO: Implement for Task 0.2.
-    raise NotImplementedError("Need to implement for Task 0.2")
+    for x, y, z in permutations((a, b, c)):
+        if x < y < z:
+            assert lt(x, y)
+            assert lt(y, z)
+            assert lt(x, z)
 
 
 @pytest.mark.task0_2
-def test_symmetric() -> None:
+@given(small_floats, small_floats)
+def test_symmetric(a: float, b: float) -> None:
     """Write a test that ensures that :func:`minitorch.operators.mul` is symmetric, i.e.
     gives the same value regardless of the order of its input.
     """
-    # TODO: Implement for Task 0.2.
-    raise NotImplementedError("Need to implement for Task 0.2")
+    assert mul(a, b) == mul(b, a)
 
 
 @pytest.mark.task0_2
-def test_distribute() -> None:
+@given(small_floats, small_floats, small_floats)
+def test_distribute(a: float, b: float, c: float) -> None:
     r"""Write a test that ensures that your operators distribute, i.e.
     :math:`z \times (x + y) = z \times x + z \times y`
     """
-    # TODO: Implement for Task 0.2.
-    raise NotImplementedError("Need to implement for Task 0.2")
+    assert_close(mul(a, add(b, c)), add(mul(a, b), mul(a, c)))
 
 
 @pytest.mark.task0_2
-def test_other() -> None:
+@given(small_floats)
+def test_other(a: float) -> None:
     """Write a test that ensures some other property holds for your functions."""
-    # TODO: Implement for Task 0.2.
-    raise NotImplementedError("Need to implement for Task 0.2")
+    assert_close(log(exp(a)), a)
 
 
 # ## Task 0.3  - Higher-order functions
@@ -164,17 +181,18 @@ def test_zip_with(a: float, b: float, c: float, d: float) -> None:
     lists(small_floats, min_size=5, max_size=5),
     lists(small_floats, min_size=5, max_size=5),
 )
-def test_sum_distribute(ls1: List[float], ls2: List[float]) -> None:
+def test_sum_distribute(ls1: list[float], ls2: list[float]) -> None:
     """Write a test that ensures that the sum of `ls1` plus the sum of `ls2`
     is the same as the sum of each element of `ls1` plus each element of `ls2`.
     """
-    # TODO: Implement for Task 0.3.
-    raise NotImplementedError("Need to implement for Task 0.3")
+    sum1 = sum(ls1) + sum(ls2)
+    sum2 = sum(ls1 + ls2)
+    assert_close(sum1, sum2)
 
 
 @pytest.mark.task0_3
 @given(lists(small_floats))
-def test_sum(ls: List[float]) -> None:
+def test_sum(ls: list[float]) -> None:
     assert_close(sum(ls), minitorch.operators.sum(ls))
 
 
@@ -186,7 +204,7 @@ def test_prod(x: float, y: float, z: float) -> None:
 
 @pytest.mark.task0_3
 @given(lists(small_floats))
-def test_negList(ls: List[float]) -> None:
+def test_neglist(ls: list[float]) -> None:
     check = negList(ls)
     for i, j in zip(ls, check):
         assert_close(i, -j)
@@ -202,7 +220,7 @@ one_arg, two_arg, _ = MathTest._tests()
 
 @given(small_floats)
 @pytest.mark.parametrize("fn", one_arg)
-def test_one_args(fn: Tuple[str, Callable[[float], float]], t1: float) -> None:
+def test_one_args(fn: tuple[str, Callable[[float], float]], t1: float) -> None:
     name, base_fn = fn
     base_fn(t1)
 
@@ -210,7 +228,7 @@ def test_one_args(fn: Tuple[str, Callable[[float], float]], t1: float) -> None:
 @given(small_floats, small_floats)
 @pytest.mark.parametrize("fn", two_arg)
 def test_two_args(
-    fn: Tuple[str, Callable[[float, float], float]], t1: float, t2: float
+    fn: tuple[str, Callable[[float, float], float]], t1: float, t2: float
 ) -> None:
     name, base_fn = fn
     base_fn(t1, t2)

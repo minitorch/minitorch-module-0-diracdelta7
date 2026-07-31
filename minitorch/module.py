@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Optional, Sequence, Tuple
+from typing import Any
+from collections.abc import Sequence
 
 
 class Module:
@@ -15,8 +16,8 @@ class Module:
 
     """
 
-    _modules: Dict[str, Module]
-    _parameters: Dict[str, Parameter]
+    _modules: dict[str, Module]
+    _parameters: dict[str, Parameter]
     training: bool
 
     def __init__(self) -> None:
@@ -26,20 +27,26 @@ class Module:
 
     def modules(self) -> Sequence[Module]:
         """Return the direct child modules of this module."""
-        m: Dict[str, Module] = self.__dict__["_modules"]
+        m: dict[str, Module] = self._modules
         return list(m.values())
 
     def train(self) -> None:
         """Set the mode of this module and all descendent modules to `train`."""
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError("Need to implement for Task 0.4")
+        stack: list[Module] = [self]
+        while stack:
+            module = stack.pop()
+            module.training = True
+            stack.extend(module.modules())
 
     def eval(self) -> None:
         """Set the mode of this module and all descendent modules to `eval`."""
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError("Need to implement for Task 0.4")
+        stack: list[Module] = [self]
+        while stack:
+            module = stack.pop()
+            module.training = False
+            stack.extend(module.modules())
 
-    def named_parameters(self) -> Sequence[Tuple[str, Parameter]]:
+    def named_parameters(self) -> Sequence[tuple[str, Parameter]]:
         """Collect all the parameters of this module and its descendents.
 
         Returns
@@ -47,13 +54,25 @@ class Module:
             The name and `Parameter` of each ancestor parameter.
 
         """
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError("Need to implement for Task 0.4")
+        result = list(self._parameters.items())
+
+        for m_name, m in self.__dict__["_modules"].items():
+            for p_name, param in m.named_parameters():
+                result.append(
+                    (f"{m_name}.{p_name}",param)
+                )
+
+        return result
 
     def parameters(self) -> Sequence[Parameter]:
         """Enumerate over all the parameters of this module and its descendents."""
-        # TODO: Implement for Task 0.4.
-        raise NotImplementedError("Need to implement for Task 0.4")
+        result = []
+        p: dict[str, Parameter] = self.__dict__["_parameters"]
+        for param in p.values():
+            result.append(param)
+        for m in self.modules():
+            result.extend(m.parameters())
+        return result
 
     def add_parameter(self, k: str, v: Any) -> Parameter:
         """Manually add a parameter. Useful helper for scalar parameters.
@@ -72,7 +91,7 @@ class Module:
         self.__dict__["_parameters"][k] = val
         return val
 
-    def __setattr__(self, key: str, val: Parameter) -> None:
+    def __setattr__(self, key: str, val: Any) -> None:
         if isinstance(val, Parameter):
             self.__dict__["_parameters"][key] = val
         elif isinstance(val, Module):
@@ -86,9 +105,12 @@ class Module:
 
         if key in self.__dict__["_modules"]:
             return self.__dict__["_modules"][key]
-        return None
+        raise AttributeError(
+            f"{type(self).__name__!s} has no attribute {key!r}"
+        )
 
     def __call__(self, *args: Any, **kwargs: Any) -> Any:
+        """Call forward with the provided arguments."""
         return self.forward(*args, **kwargs)
 
     def __repr__(self) -> str:
@@ -126,7 +148,7 @@ class Parameter:
     any value for testing.
     """
 
-    def __init__(self, x: Any, name: Optional[str] = None) -> None:
+    def __init__(self, x: Any, name: str | None = None) -> None:
         self.value = x
         self.name = name
         if hasattr(x, "requires_grad_"):

@@ -61,6 +61,7 @@ markers = [
     "task4_4",
 ]
 [tool.ruff]
+target-version = "py312"
 
 exclude = [
     ".git",
@@ -98,7 +99,7 @@ ignore = [
     "ANN204",
     "ANN102",
 ]
-select = ["D", "E", "F", "N", "ANN"]
+select = ["D", "E", "F", "N", "ANN", "UP"]
 fixable = [
     "A",
     "B",
@@ -149,3 +150,8 @@ unfixable = []
 
 [tool.ruff.extend-per-file-ignores]
 "tests/**/*.py" = ["D"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+]
